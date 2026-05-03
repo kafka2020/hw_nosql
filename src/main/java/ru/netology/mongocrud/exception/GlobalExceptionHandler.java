@@ -1,4 +1,4 @@
-package com.example.mongocrud.exception;
+package ru.netology.mongocrud.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

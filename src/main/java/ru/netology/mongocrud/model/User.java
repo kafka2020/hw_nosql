@@ -1,4 +1,4 @@
-package com.example.mongocrud.model;
+package ru.netology.mongocrud.model;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;

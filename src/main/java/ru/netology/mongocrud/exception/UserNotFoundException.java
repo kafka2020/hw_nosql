@@ -1,4 +1,4 @@
-package com.example.mongocrud.exception;
+package ru.netology.mongocrud.exception;
 
 public class UserNotFoundException extends RuntimeException {
 

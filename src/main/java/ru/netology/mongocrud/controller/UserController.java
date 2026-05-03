@@ -1,8 +1,8 @@
-package com.example.mongocrud.controller;
+package ru.netology.mongocrud.controller;
 
-import com.example.mongocrud.exception.UserNotFoundException;
-import com.example.mongocrud.model.User;
-import com.example.mongocrud.repository.UserRepository;
+import ru.netology.mongocrud.exception.UserNotFoundException;
+import ru.netology.mongocrud.model.User;
+import ru.netology.mongocrud.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
