@@ -26,12 +26,9 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                // GET /api/users — публичный endpoint
                 .requestMatchers(HttpMethod.GET, "/api/users").permitAll()
-                // Все остальные запросы — только авторизованным
                 .anyRequest().authenticated()
             )
-            // Стандартная форма логина от Spring Security
             .formLogin(form -> form
                 .defaultSuccessUrl("/api/users", true)
                 .permitAll()
@@ -40,31 +37,47 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/api/users")
                 .permitAll()
             )
-            // Отключаем CSRF для удобства тестирования REST API через curl/Postman
             .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
 
     /**
-     * In-memory пользователи для демонстрации.
-     * В реальном приложении данные берутся из БД.
+     * In-memory пользователи с разными наборами ролей.
      */
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
+        UserDetails reader = User.builder()
+                .username("reader")
+                .password(passwordEncoder().encode("reader123"))
+                .roles("READ")
+                .build();
+
+        UserDetails writer = User.builder()
+                .username("writer")
+                .password(passwordEncoder().encode("writer123"))
+                .roles("WRITE")
+                .build();
+
+        UserDetails deleter = User.builder()
+                .username("deleter")
+                .password(passwordEncoder().encode("deleter123"))
+                .roles("DELETE")
+                .build();
+
+        UserDetails superuser = User.builder()
+                .username("superuser")
+                .password(passwordEncoder().encode("super123"))
+                .roles("READ", "WRITE", "DELETE")
+                .build();
+
         UserDetails admin = User.builder()
                 .username("admin")
                 .password(passwordEncoder().encode("admin123"))
-                .roles("ADMIN")
+                .roles("ADMIN", "READ", "WRITE", "DELETE")
                 .build();
 
-        UserDetails user = User.builder()
-                .username("user")
-                .password(passwordEncoder().encode("user123"))
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin, user);
+        return new InMemoryUserDetailsManager(reader, writer, deleter, superuser, admin);
     }
 
     @Bean

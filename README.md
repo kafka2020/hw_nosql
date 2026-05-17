@@ -1,34 +1,41 @@
-# Домашнее задание — Spring Security: Безопасное приложение
+# Домашнее задание — Spring Method Security: Безопасные методы
 
 ## Описание
 
 Проект представляет собой REST API для управления пользователями на базе **Spring Boot** и **MongoDB**.
-В данном домашнем задании к приложению добавлена защита с помощью **Spring Security**.
+В данном ДЗ добавлена безопасность на уровне методов (Method Security)
+поверх Spring Security из предыдущего задания.
 
 ## Что реализовано
 
-- Добавлена зависимость `spring-boot-starter-security` в `pom.xml`
-- Реализован класс конфигурации `SecurityConfig` с использованием `SecurityFilterChain`
-- Настроена стандартная форма логина Spring Security (`/login`)
-- Разграничен доступ к endpoints:
+### Spring Security (из предыдущего ДЗ)
+- Форма логина Spring Security (`/login`)
+- `GET /api/users` — публичный endpoint (без авторизации)
+- Все остальные endpoints — только после авторизации
 
-| Endpoint                         | Метод  | Доступ                      |
-|----------------------------------|--------|-----------------------------|
-| `/api/users`                     | GET    | Публичный (без авторизации) |
-| `/api/users/{id}`                | GET    | Только авторизованным       |
-| `/api/users/search/by-name`      | GET    | Только авторизованным       |
-| `/api/users/search/by-age`       | GET    | Только авторизованным       |
-| `/api/users/search/by-age-range` | GET    | Только авторизованным       |
-| `/api/users`                     | POST   | Только авторизованным       |
-| `/api/users/{id}`                | PUT    | Только авторизованным       |
-| `/api/users/{id}`                | DELETE | Только авторизованным       |
+### Method Security (новое)
+- Включены все три типа аннотаций: `@Secured`, `@RolesAllowed`, `@PreAuthorize` / `@PostAuthorize`
+- Добавлен новый контроллер `SecureController` (`/api/secure/**`)
+- Добавлены пользователи с ролями READ / WRITE / DELETE
 
-## Тестовые пользователи (In-Memory)
+## Пользователи
 
-| Логин   | Пароль     | Роль  |
-|---------|------------|-------|
-| `admin` | `admin123` | ADMIN |
-| `user`  | `user123`  | USER  |
+| Логин       | Пароль       | Роли                        |
+|------------|-------------|----------------------------|
+| `reader`   | `reader123` | READ                       |
+| `writer`   | `writer123` | WRITE                      |
+| `deleter`  | `deleter123`| DELETE                     |
+| `superuser`| `super123`  | READ, WRITE, DELETE        |
+| `admin`    | `admin123`  | ADMIN, READ, WRITE, DELETE |
+
+## Endpoints контроллера /api/secure
+
+| Endpoint                      | Метод | Аннотация       | Кто имеет доступ                     |
+|-------------------------------|-------|-----------------|--------------------------------------|
+| `/api/secure/read`            | GET   | `@Secured`      | Роль READ                           |
+| `/api/secure/write`           | GET   | `@RolesAllowed` | Роль WRITE                          |
+| `/api/secure/write-or-delete` | GET   | `@PreAuthorize` | Роль WRITE **или** DELETE            |
+| `/api/secure/my-data`         | GET   | `@PreAuthorize` | Только сам пользователь (by username) |
 
 ## Запуск приложения
 
@@ -52,37 +59,30 @@ mvn spring-boot:run
 
 Приложение будет доступно по адресу: `http://localhost:8080`
 
-## Проверка безопасности
-
-### Публичный endpoint (без авторизации)
+## Примеры запросов
 
 ```bash
-# Доступно без логина — вернёт список всех пользователей
-curl http://localhost:8080/api/users
+# Доступно для reader и superuser
+curl -u reader:reader123 http://localhost:8080/api/secure/read
+
+# Доступно для writer и superuser
+curl -u writer:writer123 http://localhost:8080/api/secure/write
+
+# Доступно для writer, deleter и superuser
+curl -u deleter:deleter123 http://localhost:8080/api/secure/write-or-delete
+
+# Доступно: username совпадает с логином
+curl -u reader:reader123 "http://localhost:8080/api/secure/my-data?username=reader"
+
+# Ошибка 403: reader пытается получить данные чужого пользователя
+curl -u reader:reader123 "http://localhost:8080/api/secure/my-data?username=writer"
 ```
-
-### Защищённый endpoint (требует авторизации)
-
-```bash
-# Без авторизации — редирект на страницу /login
-curl -v http://localhost:8080/api/users/123
-
-# С авторизацией (Basic Auth) — вернёт данные пользователя
-curl -u admin:admin123 http://localhost:8080/api/users/123
-```
-
-### Форма логина в браузере
-
-Откройте: `http://localhost:8080/login`
-
-Введите логин и пароль из таблицы тестовых пользователей выше.
 
 ## Технологии
 
 - Java 17
 - Spring Boot 3.2
-- Spring Security 6
+- Spring Security 6 (Method Security)
 - Spring Data MongoDB
-- MongoDB
 - Lombok
 - Docker / Docker Compose
