@@ -1,68 +1,88 @@
-# mongo-crud
+# Домашнее задание — Spring Security: Безопасное приложение
 
-Spring Boot REST API для управления пользователями. Данные хранятся в MongoDB.
+## Описание
 
-## Стек
+Проект представляет собой REST API для управления пользователями на базе **Spring Boot** и **MongoDB**.
+В данном домашнем задании к приложению добавлена защита с помощью **Spring Security**.
 
-- Java 17, Spring Boot 3.2
-- Spring Data MongoDB
-- Bean Validation, Lombok
-- Docker (MongoDB)
+## Что реализовано
 
-## Запуск
+- Добавлена зависимость `spring-boot-starter-security` в `pom.xml`
+- Реализован класс конфигурации `SecurityConfig` с использованием `SecurityFilterChain`
+- Настроена стандартная форма логина Spring Security (`/login`)
+- Разграничен доступ к endpoints:
+
+| Endpoint                         | Метод  | Доступ                      |
+|----------------------------------|--------|-----------------------------|
+| `/api/users`                     | GET    | Публичный (без авторизации) |
+| `/api/users/{id}`                | GET    | Только авторизованным       |
+| `/api/users/search/by-name`      | GET    | Только авторизованным       |
+| `/api/users/search/by-age`       | GET    | Только авторизованным       |
+| `/api/users/search/by-age-range` | GET    | Только авторизованным       |
+| `/api/users`                     | POST   | Только авторизованным       |
+| `/api/users/{id}`                | PUT    | Только авторизованным       |
+| `/api/users/{id}`                | DELETE | Только авторизованным       |
+
+## Тестовые пользователи (In-Memory)
+
+| Логин   | Пароль     | Роль  |
+|---------|------------|-------|
+| `admin` | `admin123` | ADMIN |
+| `user`  | `user123`  | USER  |
+
+## Запуск приложения
+
+### Предварительные требования
+
+- Java 17+
+- Maven 3.8+
+- Docker и Docker Compose (для MongoDB)
+
+### 1. Запустить MongoDB
 
 ```bash
-# 1. Поднять MongoDB
 docker-compose up -d
+```
 
-# 2. Запустить приложение
+### 2. Запустить приложение
+
+```bash
 mvn spring-boot:run
 ```
 
-API доступно на `http://localhost:8080`.
+Приложение будет доступно по адресу: `http://localhost:8080`
 
-## Endpoints
+## Проверка безопасности
 
-| Метод | URL | Описание |
-|-------|-----|----------|
-| GET | `/api/users` | Все пользователи |
-| GET | `/api/users/{id}` | Пользователь по ID |
-| GET | `/api/users/search/by-name?name=` | Поиск по имени |
-| GET | `/api/users/search/by-age?age=` | Поиск по возрасту |
-| GET | `/api/users/search/by-age-range?minAge=&maxAge=` | Диапазон возраста |
-| POST | `/api/users` | Создать пользователя |
-| PUT | `/api/users/{id}` | Обновить пользователя |
-| DELETE | `/api/users/{id}` | Удалить пользователя |
-
-## Пример запроса
+### Публичный endpoint (без авторизации)
 
 ```bash
-curl -X POST http://localhost:8080/api/users \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Иван Иванов","email":"ivan@example.com","age":28}'
+# Доступно без логина — вернёт список всех пользователей
+curl http://localhost:8080/api/users
 ```
 
-Ответ `201 Created`:
-
-```json
-{
-  "id": "665f3a1b2c3d4e5f6a7b8c9d",
-  "name": "Иван Иванов",
-  "email": "ivan@example.com",
-  "age": 28
-}
-```
-
-## Валидация
-
-- `name` — обязательное, не пустое
-- `email` — формат user@domain.tld, уникальный
-- `age` — целое число от 0 до 150
-
-Ошибки возвращаются с кодом `400 Bad Request` и описанием по каждому полю.
-
-## Остановить MongoDB
+### Защищённый endpoint (требует авторизации)
 
 ```bash
-docker-compose down
+# Без авторизации — редирект на страницу /login
+curl -v http://localhost:8080/api/users/123
+
+# С авторизацией (Basic Auth) — вернёт данные пользователя
+curl -u admin:admin123 http://localhost:8080/api/users/123
 ```
+
+### Форма логина в браузере
+
+Откройте: `http://localhost:8080/login`
+
+Введите логин и пароль из таблицы тестовых пользователей выше.
+
+## Технологии
+
+- Java 17
+- Spring Boot 3.2
+- Spring Security 6
+- Spring Data MongoDB
+- MongoDB
+- Lombok
+- Docker / Docker Compose
